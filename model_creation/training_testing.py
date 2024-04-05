@@ -3,6 +3,7 @@ from typing import Literal
 
 import numpy as np
 import pandas as pd
+import shap
 from lightgbm import LGBMRegressor
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import RandomForestRegressor
@@ -141,7 +142,8 @@ class TrainPredict:
         return model, col_transform, col_scale
 
 
-    def recursive_forecasting(self, model_type: Literal['xgb', 'lgb', 'rf', 'lasso']):
+    def recursive_forecasting(self, model_type: Literal['xgb', 'lgb', 'rf', 'lasso'],
+                              generate_shap: bool = False):
         """Employing the recursive forecasting strategy: one-step-ahead forecast is made,
         the output is then taken to recalculate lag variables.
 
@@ -191,6 +193,8 @@ class TrainPredict:
         df_test = feature_engineering.release_exogenous_vars(df=df_test, date_col=self.date_col, id_col=self.id_col,
                                                              exogenous_cols=self.exogenous_cols, n_release_vars=7,
                                                              suppress_warnings=True)
+        # SHAP values
+        fc_shap = []
 
         # Recursive forecasting
         for idx, date_fc in enumerate(self.fc_periods):
@@ -215,12 +219,35 @@ class TrainPredict:
             df_test.loc[df_test[self.date_col] == date_fc, self.target_col] = model.predict(data_fc_iter_transf)
             df_test.loc[df_test[self.date_col] == date_fc, 'day_number'] = idx
 
+            # SHAP values
+            if generate_shap:
+
+                # TODO: sklearn XGB doesn't properly for SHAP. For now, only the native `xgb.train()` works.
+
+                tree_explainer = shap.TreeExplainer(model)
+                shap_values = tree_explainer.shap_values(data_fc_iter_transf)
+                fc_shap.append(shap_values)
+
         # Keeping relevant columns
         df_test = df_test[[self.date_col, self.id_col, 'day_number', self.target_col]]
-        df_test = df_test[df_test[self.date_col] >= self.df_test[self.date_col].min()]
+        df_test = df_test[df_test[self.date_col] >= self.df_test[self.date_col].min()].reset_index(drop=True)
         df_test['model'] = model_type
 
-        return df_test
+        if generate_shap:
+            # Renaming columns that appear in both test set and SHAP dataframe
+            shap_cols = list(data_fc_iter_transf.columns)
+            shap_test_cols = list(data_fc_iter_transf.columns) + list(df_test.columns)
+            shap_cols_rename = set(filter(lambda x: shap_test_cols.count(x) > 1, shap_test_cols))
+            shap_cols_new = [f'{x}_shap' for x in shap_cols_rename]
+
+            # Concatenating SHAP dataframe with test set
+            df_shap = pd.DataFrame(np.concatenate(fc_shap), columns=shap_cols).reset_index(drop=True)
+            df_shap = df_shap.rename(columns=dict(zip(shap_cols_rename, shap_cols_new)))
+            df_shap = pd.concat([df_test, df_shap], axis=1)
+        else:
+            df_shap = None
+
+        return df_test, df_shap
 
 
     def recursive_forecasting_multiple_models(self, model_type_list: list):
@@ -230,10 +257,14 @@ class TrainPredict:
             model_type_list : a list of sklearn ML algorithms.
         """
 
+        # Warning
+        print('* When forecasting for multiple models, `generate_shap` == False.')
+
         fc_models = []
 
         for model_type in model_type_list:
-            fc = self.recursive_forecasting(model_type=model_type)
+            print(f'* {model_type}: forecasting...')
+            fc, _ = self.recursive_forecasting(model_type=model_type, generate_shap=False)
             fc_models.append(fc)
 
         fc_models = pd.concat(fc_models)

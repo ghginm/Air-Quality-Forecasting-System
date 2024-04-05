@@ -119,7 +119,29 @@ for idx, version in enumerate(fc_dates_versions):
 fc_all_tuned = pd.concat(fc_versions)
 fc_all_tuned['tuning'] = 'True'
 
-# Analysing results
+# SHAP (lgb)
+fc_versions, fc_shap = [], []
+
+for idx, version in enumerate(fc_dates_versions):
+    data_train, _, data_test = tuning_cv.train_val_test_split(df=data, date_col=config_data['date_col'],
+                                                              id_col=config_data['id_col'],
+                                                              test_size=None, val_size_es=None,
+                                                              supply_test_dates=True, test_dates=version)
+
+    tr_te = training_testing.TrainPredict(df_train=data_train, df_test=data_test, ignore_cols=ignore_cols,
+                                          config=config, path=path_model,
+                                          date_col=config_data['date_col'], id_col=config_data['id_col'],
+                                          target_col=config_data['target_col'],
+                                          exogenous_cols=['wind-gust_median', 'temperature_max'],
+                                          model_params_default=False)
+
+    _, df_shap = tr_te.recursive_forecasting(model_type='lgb', generate_shap=True)
+    df_shap['fc_version'] = idx
+    fc_shap.append(df_shap)
+
+shap_all_lgb = pd.concat(fc_shap)
+
+# Storing results
 fc_all = pd.concat([fc_all_default, fc_all_tuned])
 fc_all = fc_all.rename(columns={config_data['target_col']: f"{config_data['target_col']}_forecast"})
 
@@ -128,3 +150,6 @@ fc_all = fc_all.merge(data[[config_data['date_col'], config_data['id_col'], conf
 
 with open(f'{path_project}\\data\\forecast.parquet', 'wb') as handle:
     pq.write_table(pa.Table.from_pandas(fc_all), handle, compression='GZIP')
+
+with open(f'{path_project}\\data\\shap_lgb.parquet', 'wb') as handle:
+    pq.write_table(pa.Table.from_pandas(shap_all_lgb), handle, compression='GZIP')
