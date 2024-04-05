@@ -194,7 +194,7 @@ class TrainPredict:
                                                              exogenous_cols=self.exogenous_cols, n_release_vars=7,
                                                              suppress_warnings=True)
         # SHAP values
-        fc_shap = []
+        fc_shap, structure_shap = [], []
 
         # Recursive forecasting
         for idx, date_fc in enumerate(self.fc_periods):
@@ -209,7 +209,7 @@ class TrainPredict:
             # Filtering the forecast date
             data_fc_iter = data_fc_iter[data_fc_iter[self.date_col] == date_fc]
 
-            # Encoding / scaling features
+            # Encoding / scaling features (non-specified columns are dropped, i.e. those that are not used in training)
             data_fc_iter_transf = pd.DataFrame(col_transform.transform(data_fc_iter),
                                                columns=col_transform.get_feature_names_out())
             data_fc_iter_transf = pd.DataFrame(col_scale.transform(data_fc_iter_transf),
@@ -225,8 +225,9 @@ class TrainPredict:
                 # TODO: sklearn XGB doesn't properly for SHAP. For now, only the native `xgb.train()` works.
 
                 tree_explainer = shap.TreeExplainer(model)
-                shap_values = tree_explainer.shap_values(data_fc_iter_transf)
+                shap_values = tree_explainer.shap_values(data_fc_iter_transf)  # tree_explainer.expected_value
                 fc_shap.append(shap_values)
+                structure_shap.append(data_fc_iter[[self.date_col, self.id_col]])
 
         # Keeping relevant columns
         df_test = df_test[[self.date_col, self.id_col, 'day_number', self.target_col]]
@@ -243,7 +244,8 @@ class TrainPredict:
             # Concatenating SHAP dataframe with test set
             df_shap = pd.DataFrame(np.concatenate(fc_shap), columns=shap_cols).reset_index(drop=True)
             df_shap = df_shap.rename(columns=dict(zip(shap_cols_rename, shap_cols_new)))
-            df_shap = pd.concat([df_test, df_shap], axis=1)
+            df_shap = pd.concat([pd.concat(structure_shap).reset_index(drop=True), df_shap], axis=1)
+            df_shap = df_test.merge(df_shap, how='left', on=[self.date_col, self.id_col])
         else:
             df_shap = None
 
