@@ -1,5 +1,10 @@
 # CSCI6409 Project
 
+## Contributors
+* [Konstantin Zuev](https://github.com/ghginm) 
+* [Mohammed Usama Jasnak](https://github.com/UsamaJasnak/) 
+* [Siqi Wang](https://github.com/Ceecee2023)
+
 ## Goals
 
 This project targets the critical issue of air pollution by building an Air Quality Forecasting System (AQFS). The objectives include conducting thorough data analysis to understand pollution patterns, creating a precise model for predicting air quality i.e. forecasting PM 2.5 (fine particles in the air that have a diameter of less than 2.5 micrometres), and enhancing the model's performance with advanced feature engineering and hyperparameter tuning.
