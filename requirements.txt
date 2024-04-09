@@ -1,0 +1,13 @@
+fastparquet==2023.7.0
+lightgbm==4.0.0
+optuna==3.2.0
+seaborn==0.12.2
+shap==0.42.1
+statsforecast==1.6.0
+workalendar==17.0.0
+xgboost==2.0.3
+pandas==2.2.1
+numpy==1.24.4
+scikit-learn==1.4.0
+workalendar==17.0.0
+pyarrow==12.0.1
