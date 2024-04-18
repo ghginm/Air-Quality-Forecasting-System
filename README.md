@@ -33,20 +33,20 @@ Air-Quality-Forecasting-System/
 
 **Additional information**:
 
-* `./data/`: stores all relevant data sources.
+* <code>./data/</code>: stores all relevant data sources.
 
-* `./eda/data_processing_eda.ipynb`: extensive EDA and data processing.
-* `./eda/inference_eda.ipynb`: model performance analysis.
+* <code>./eda/data_processing_eda.ipynb</code>: extensive EDA and data processing.
+* <code>./eda/inference_eda.ipynb</code>: model performance analysis.
 
-* `./model/`: stores all trained models as well as hyperparameters obainted after tuning.
+* <code>./model/</code>: stores all trained models as well as hyperparameters obainted after tuning.
 
-* `./model_creation/feature_engineering.py`: creating feature engineering to transform hierarchocal time-series problem to ML one.
-* `./model_creation/training_testing.py`: training models employing recursive forecasting and obtaining out-of-sample performance on the test set.
-* `./model_creation/tuning_cv.py`: tuning models (Optuna, random search).
+* <code>./model_creation/feature_engineering.py</code>: creating feature engineering to transform hierarchocal time-series problem to ML one.
+* <code>./model_creation/training_testing.py</code>: training models employing recursive forecasting and obtaining out-of-sample performance on the test set.
+* <code>./model_creation/tuning_cv.py</code>: tuning models (Optuna, random search).
 
-* `./utils/data_utils.py`: creating data quality reports.
+* <code>./utils/data_utils.py</code>: creating data quality reports.
 
-* `./config.json`: a config file with key parameters for tuning, cross-validation and more.
-* `./main.ipynb`: interactive notebook with EDA + model training and inference, i.e. a quick and reproducable example.
-* `./model_development_inference.py`: model training / testing for a given dataset.
-* `./optimisation.py`: model optimisation for a given dataset.
+* <code>./config.json</code>: a config file with key parameters for tuning, cross-validation and more.
+* <code>./main.ipynb</code>: interactive notebook with EDA + model training and inference, i.e. a quick and reproducable example.
+* <code>./model_development_inference.py</code>: model training / testing for a given dataset.
+* <code>./optimisation.py</code>: model optimisation for a given dataset.
