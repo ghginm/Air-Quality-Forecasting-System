@@ -31,7 +31,15 @@ Air-Quality-Forecasting-System/
 └── optimisation.py
 ```
 
-**Additional information**:
+## Project flowchart
+
+<div align="center">
+  <picture>
+    <img alt="Seq2Seq" src="eda/graph.png" width="850" height="auto">
+  </picture>
+</div>
+
+## File description
 
 * <code>./data/</code>: stores all relevant data sources.
 
